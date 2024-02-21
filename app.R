@@ -8,8 +8,10 @@ library(readr)
 library(dplyr)
 library(tidyr)
 library(stringr)
-getwd()
-rds_filename_org <- "~/R/SMART_APP/SMART_APP/Data/alldat_2024-01-03.rds"
+#================================
+# Initial  data
+
+rds_filename_org <- "Data/alldat_2024-01-03.rds"
 alldat <- readRDS(rds_filename_org)
 
 #================================
@@ -39,8 +41,8 @@ ALL_REFLEX<-alldat%>%
 #================================
 # Batch data
 
-Refelex_EDOs <- read_csv("~/R/SMART_APP/SMART_APP/Data/Reflex_EDO.csv")
-workdays <- read_csv("~/R/SMART_APP/SMART_APP/Data/workdays.csv")
+Refelex_EDOs <- read_csv("Data/Reflex_EDO.csv")
+workdays <- read_csv("Data/workdays.csv")
 workdays<-workdays%>%
   mutate(measurmenttype=MESSGROESSE)%>%
   mutate(mean=MITTELWERT)%>%
@@ -96,16 +98,18 @@ shinyApp(
     f7TabLayout(
       panels = tagList(
         f7Panel(title = "Left Panel", side = "left", theme = "light", "Links Bla", effect = "cover"),
-        f7Panel(title = "Right Panel", side = "right", theme = "dark", "Rechts Bla", effect = "cover",f7SingleLayout(
-          navbar = f7Navbar(title = "Select EDOS"),
-          f7Select(
-            inputId = "variable",
-            label = "Choose a variable:",
-            choices = colnames(ALL_REFLEX)[-1],
-            selected = "R-P001"
-          ),
-          tableOutput("data")
-        ))
+        f7Panel(title = "Right Panel", side = "right", theme = "dark", "Rechts Bla", effect = "cover",
+                f7SingleLayout(
+                  navbar = f7Navbar(title = "Select EDOS"),
+                    f7Select(
+                      inputId = "variable1",
+                      label = "Choose a variable:",
+                      choices = colnames(ALL_REFLEX)[-1],
+                      selected = "R-P001"
+                      ),
+                    tableOutput("data1")
+                )
+        )
       ),
       navbar = f7Navbar(
         title = "SMART-GDPU-APP",

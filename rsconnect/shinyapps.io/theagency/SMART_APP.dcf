@@ -1,0 +1,12 @@
+name: SMART_APP
+title: SMART_APP
+username: theagency
+account: theagency
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 11289668
+bundleId: 8281465
+url: https://theagency.shinyapps.io/SMART_APP/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
