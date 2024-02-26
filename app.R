@@ -17,7 +17,9 @@ library(stringr)
 #================================
 # Single data
 
-singledata <- "Data/ALL_REFLEX.rds"
+#singledata <- "Data/ALL_REFLEX.rds"
+#ALL_REFLEX <- readRDS(singledata)
+singledata <- "Data/simstart_ALL_Reflex_Num.rds"
 ALL_REFLEX <- readRDS(singledata)
 
 # ALL_REFLEX<-alldat%>%
@@ -199,8 +201,10 @@ shinyApp(
             hover = TRUE,
             f7Card(
               title = "Batch Info",
-              apexchartOutput("scatter")
+              apexchartOutput("scatter"),
+              apexchartOutput("scatter2")
             )
+            
           )
         ),
         f7Tab(
@@ -214,11 +218,11 @@ shinyApp(
               f7SmartSelect(
                 "variable",
                 "Variables to show:",
-                c("Dose Accuracy" = "R-P001",
-                  "Actuation Force" = "R-P026",
-                  "Injection Time" = "R-P027",
-                  "Injection Depth" = "R-P028",
-                  "Needle Cover" = "R-P029"),
+                c("Dose Accuracy" = "mdose",
+                  "Actuation Force" = "mact",
+                  "Injection Time" = "mitime",
+                  "Injection Depth" = "midepth",
+                  "Needle Cover" = "mnpos"),
                 openIn = "sheet",
                 multiple = TRUE
               ),
@@ -244,12 +248,23 @@ shinyApp(
     
     output$scatter <- renderApexchart({
       apex(
-        data = mtcars,
+        data = ALL_REFLEX,
         type = "scatter",
         mapping = aes(
-          x = wt,
-          y = mpg,
-          fill = cyl
+          x = charge,
+          y = mdose,
+          fill = mat_bez
+        )
+      )
+    })
+    output$scatter2 <- renderApexchart({
+      apex(
+        data = ALL_REFLEX,
+        type = "scatter",
+        mapping = aes(
+          x = charge,
+          y = mact,
+          fill = mat_bez
         )
       )
     })
@@ -257,7 +272,7 @@ shinyApp(
     
     # datatable
     output$data <- renderTable({
-      ALL_REFLEX[, c("auftr_nr","mat_nr","charge","mat_bez", input$variable), drop = FALSE]
+      ALL_REFLEX[, c("charge","mat_bez","NewN20" ,input$variable), drop = FALSE]
     }, rownames = TRUE)
     
     
