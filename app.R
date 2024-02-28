@@ -1,4 +1,5 @@
 library(shiny)
+
 library(shinyMobile)
 
 library(apexcharter)
@@ -203,7 +204,10 @@ shinyApp(
             f7Card(
               title = "Batch Info",
               apexchartOutput("scatter"),
-              apexchartOutput("scatter2")
+              apexchartOutput("scatter2"),
+              apexchartOutput("scatter3"),
+              apexchartOutput("scatter4"),
+              apexchartOutput("scatter5")
             )
             
           )
@@ -256,7 +260,7 @@ shinyApp(
           y = mdose,
           fill = mat_bez
         )
-      )
+      )|>ax_title(text ='Dose Accuracy')
     })
     output$scatter2 <- renderApexchart({
       apex(
@@ -267,7 +271,40 @@ shinyApp(
           y = mact,
           fill = mat_bez
         )
-      )
+      )|>ax_title(text ='Actuation Force')
+    })
+    output$scatter3 <- renderApexchart({
+      apex(
+        data = ALL_REFLEX,
+        type = "scatter",
+        mapping = aes(
+          x = charge,
+          y = mitime,
+          fill = mat_bez
+        )
+      )|>ax_title(text ='Injection Time')
+    })
+    output$scatter4 <- renderApexchart({
+      apex(
+        data = ALL_REFLEX,
+        type = "scatter",
+        mapping = aes(
+          x = charge,
+          y = midepth,
+          fill = mat_bez
+        )
+      )|>ax_title(text ='Injection Depth')
+    })
+    output$scatter5 <- renderApexchart({
+      apex(
+        data = ALL_REFLEX,
+        type = "scatter",
+        mapping = aes(
+          x = charge,
+          y = mnpos,
+          fill = mat_bez
+        )
+      )|>ax_title(text ='Needle Position')
     })
     
     
