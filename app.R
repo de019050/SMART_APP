@@ -37,27 +37,28 @@ batchdata <- "Data/simstart_ALL_Reflex_Num.rds"
 simstart_ALL_Reflex_Num <- readRDS(batchdata)
 
 #================================
-
-
-
-
-poll <-ALL_REFLEX %>%
-  summarise(
+# Anzahl der Batches
+poll <-ALL_REFLEX|>ungroup()|>select(MAT_BEZ)|>
+  reframe(
     across(where(is.factor), nlevels),
-    n = n(), 
+    n = n(), .by=MAT_BEZ
   )
-
-
+# Anzahl der Getesten AIs
+n_tested <-ALL_REFLEX|>ungroup()|>select(CHARGENGROESSE,N,NEWN20)|>
+  reframe(
+    across(where(is.numeric), sum),
+    n = n(),
+  )
 
 #================================
 
 
 shinyApp(
   ui = f7Page(
-    title = "SMART-GDPU-APP",
+    #title = "SMART-GDPU-APP",
     f7TabLayout(
       panels = tagList(
-        f7Panel( side = "left", theme = "light", effect = "reveal",
+        f7Panel( side = "left", theme = "light", effect = "cover",
                 f7Card(
                     title = "About SMART-GDPU",
                     "This is a simple app with plain text,
@@ -68,14 +69,14 @@ shinyApp(
                     f7Badge("Badge", color = "green")
           ))
           ),
-        f7Panel(title = "Right Panel", side = "right", theme = "light", "Rechts Bla", effect = "cover",
+        f7Panel(side = "right", theme = "light", effect = "cover",
                 f7SingleLayout(
                   navbar = f7Navbar(title = "Select EDOS"),
                     f7Select(
                       inputId = "variable1",
                       label = "Choose a variable:",
                       choices = colnames(ALL_REFLEX)[-1],
-                      selected = "R-P001"
+                      selected = "MDOSE"
                       ),
                     tableOutput("data1")
                 )
@@ -90,7 +91,6 @@ shinyApp(
       ),
       f7Tabs(
         animated = TRUE,
-        #swipeable = TRUE,
         f7Tab(
           tabName = "ProductionInfo",
           icon = f7Icon("folder"),
@@ -107,7 +107,6 @@ shinyApp(
               animation = "pulse",
               status = "info"
             ),
-            
             prettyRadioButtons(
               inputId = "color",
               label = "Select a color:",
@@ -134,13 +133,11 @@ shinyApp(
                   $("html").removeClass("md");
                   $(".tab-link-highlight").hide();
                 }
-
                 if (skin === "dark") {
                  $(".view-main").addClass("theme-dark");
                 } else {
                   $(".view-main").removeClass("theme-dark");
                 }
-
                });
               '
             )
@@ -152,37 +149,43 @@ shinyApp(
             f7Card(
               title = "Production and Test Infos",
               apexchartOutput("pie")
-              #apexchartOutput("rBar1"),
-              
             )
           ),
-          
-          f7Shadow(
-            intensity = 5,
-            hover = TRUE,
-            f7Gauge(
-            id = "mygauge",
-            type = "semicircle",
-            value = 50,
-            borderColor = "#2196f3",
-            borderWidth = 10,
-            valueFontSize = 41,
-            valueTextColor = "#2196f3",
-            labelText = "amount of something"
+            f7Card(
+            title = "Tested AIs",
+              f7Gauge(
+                id = "mygauge",
+                type = "semicircle",
+                value = 100,
+                borderColor = "#ee6b4d",
+                borderWidth = 10,
+                valueFontSize = 15,
+                valueTextColor = "#ee6b4d",
+                labelText = paste0("Total tested AIs: ",n_tested$N)
+              ),
+               f7Gauge(
+                id = "mygauge2",
+                type = "semicircle",
+                value = round(n_tested$NEWN20/n_tested$N*100,digits = 0),
+                borderColor = "#f6c243",
+                borderWidth = 10,
+                valueFontSize = 15,
+                valueTextColor = "#f6c243",
+                labelText =  paste0("Tested s-Method ",n_tested$NEWN20)
+              ),
+                f7Gauge(
+                id = "mygauge3",
+                type = "semicircle",
+                value = round(n_tested$N*0.16/n_tested$N*100,digits = 0),
+                borderColor = "#62d488",
+                borderWidth = 10,
+                valueFontSize = 15,
+                valueTextColor = "#62d488",
+                labelText = paste0("Tested sig-Method ",round(n_tested$N*0.16,digits = 0))
+              )  
             )
-          ),
-          f7Gauge(
-            id = "mygauge2",
-            type = "semicircle",
-            value = 30,
-            borderColor = "#2196f3",
-            borderWidth = 10,
-            valueFontSize = 41,
-            valueTextColor = "#2196f3",
-            labelText = "amount of something"
-          )
-          
         ),
+        
         f7Tab(
           tabName = "Tab2",
           icon = f7Icon("keyboard"),
@@ -237,15 +240,15 @@ shinyApp(
       apex(
         data = poll,
         type = "pie",
-        mapping = aes(x = mat_bez, y = n)
+        mapping = aes(x = MAT_BEZ, y = n)
       )|>ax_title(text ='Produced Batches')
     })
 
     # output$rBar1 <- renderApexchart({
     #   apex(
-    #     data = poll|>filter(mat_bez=="JUPITER"),
+    #     data = poll|>filter(MAT_BEZ=="JUPITER"),
     #     type = "radialBar",
-    #     mapping = aes(x = mat_bez, y = n)
+    #     mapping = aes(x = MAT_BEZ, y = n)
     #   )|>ax_plotOptions(
     #     radialBar = radialBar_opts(
     #       startAngle = -90,
@@ -261,61 +264,61 @@ shinyApp(
         data = ALL_REFLEX,
         type = "line",
         aes(
-          x = charge,
+          x = CHARGE,
           y = mdose,
-          fill = mat_bez
+          fill = MAT_BEZ
           )
-      )|>ax_title(text ='Dose Accuracy')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$mdose)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>ax_title(text ='Dose Accuracy')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mdose)|>ax_states(hover = list(filter = list(type = "darken" ) ))
     })
     output$scatter2 <- renderApexchart({
       apex(
         data = ALL_REFLEX,
         type = "line",
         mapping = aes(
-          x = charge,
+          x = CHARGE,
           y = mact,
-          fill = mat_bez
+          fill = MAT_BEZ
         )
-      )|>ax_title(text ='Actuation Force')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$mact)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>ax_title(text ='Actuation Force')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mact)|>ax_states(hover = list(filter = list(type = "darken" ) ))
     })
     output$scatter3 <- renderApexchart({
       apex(
         data = ALL_REFLEX,
         type = "line",
         mapping = aes(
-          x = charge,
+          x = CHARGE,
           y = mitime,
-          fill = mat_bez
+          fill = MAT_BEZ
         )
-      )|>ax_title(text ='Injection Time')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$mitime)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>ax_title(text ='Injection Time')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mitime)|>ax_states(hover = list(filter = list(type = "darken" ) ))
     })
     output$scatter4 <- renderApexchart({
       apex(
         data = ALL_REFLEX,
         type = "line",
         mapping = aes(
-          x = charge,
+          x = CHARGE,
           y = midepth,
-          fill = mat_bez
+          fill = MAT_BEZ
         )
-      )|>ax_title(text ='Injection Depth')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$midepth)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>ax_title(text ='Injection Depth')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$midepth)|>ax_states(hover = list(filter = list(type = "darken" ) ))
     })
     output$scatter5 <- renderApexchart({
       apex(
         data = ALL_REFLEX,
         type = "line",
         mapping = aes(
-          x = charge,
+          x = CHARGE,
           y = mnpos,
-          fill = mat_bez
+          fill = MAT_BEZ
         )
-      )|>ax_title(text ='Needle Position')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$mnpos)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>ax_title(text ='Needle Position')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mnpos)|>ax_states(hover = list(filter = list(type = "darken" ) ))
     })
     
     
     # datatable
     output$data <- renderTable({
-      ALL_REFLEX[, c("charge","mat_bez","NewN20" ,input$variable), drop = FALSE]
+      ALL_REFLEX[, c("CHARGE","MAT_BEZ","NEWN20" ,input$variable), drop = FALSE]
     }, rownames = TRUE)
     
     #save
@@ -324,7 +327,7 @@ shinyApp(
         paste("data-", Sys.Date(), ".csv", sep="")
       },
       content = function(file) {
-        write.csv(ALL_REFLEX[, c("charge","mat_bez","NewN20" ,input$variable)], file)
+        write.csv(ALL_REFLEX[, c("CHARGE","MAT_BEZ","NEWN20" ,input$variable)], file)
       }
     )
     
