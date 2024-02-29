@@ -21,8 +21,8 @@ library(stringr)
 
 #singledata <- "Data/ALL_REFLEX.rds"
 #ALL_REFLEX <- readRDS(singledata)
-singledata <- "Data/simstart_ALL_Reflex_Num.rds"
-ALL_REFLEX <- readRDS(singledata)
+#singledata <- "Data/simstart_ALL_Reflex_Num.rds"
+#ALL_REFLEX <- readRDS(singledata)
 
 #================================
 
@@ -34,7 +34,7 @@ ALL_REFLEX <- readRDS(singledata)
 # Batch data
 
 batchdata <- "Data/simstart_ALL_Reflex_Num.rds"
-simstart_ALL_Reflex_Num <- readRDS(batchdata)
+ALL_REFLEX <- readRDS(batchdata)
 
 #================================
 # Anzahl der Batches
@@ -71,12 +71,13 @@ shinyApp(
           ),
         f7Panel(side = "right", theme = "light", effect = "cover",
                 f7SingleLayout(
-                  navbar = f7Navbar(title = "Select EDOS"),
+                  navbar = f7Navbar(title = "Select Material"),
                     f7Select(
                       inputId = "variable1",
                       label = "Choose a variable:",
-                      choices = colnames(ALL_REFLEX)[-1],
-                      selected = "MDOSE"
+                      #choices = ALL_REFLEXs|>select(MAT_BEZ),
+                      choices = c("R_D_J",  "R_D_M",  "R_F_M",  "R_SAR2"),
+                      selected = "R_D_J"
                       ),
                     tableOutput("data1")
                 )
@@ -261,7 +262,7 @@ shinyApp(
     
       output$scatter <- renderApexchart({
       apex(
-        data = ALL_REFLEX,
+        data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
         aes(
           x = CHARGE,
@@ -272,7 +273,7 @@ shinyApp(
     })
     output$scatter2 <- renderApexchart({
       apex(
-        data = ALL_REFLEX,
+        data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
         mapping = aes(
           x = CHARGE,
@@ -283,7 +284,7 @@ shinyApp(
     })
     output$scatter3 <- renderApexchart({
       apex(
-        data = ALL_REFLEX,
+        data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
         mapping = aes(
           x = CHARGE,
@@ -294,7 +295,7 @@ shinyApp(
     })
     output$scatter4 <- renderApexchart({
       apex(
-        data = ALL_REFLEX,
+        data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
         mapping = aes(
           x = CHARGE,
@@ -305,7 +306,7 @@ shinyApp(
     })
     output$scatter5 <- renderApexchart({
       apex(
-        data = ALL_REFLEX,
+        data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
         mapping = aes(
           x = CHARGE,
