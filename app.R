@@ -1,4 +1,5 @@
 library(shiny)
+
 library(shinyMobile)
 
 library(apexcharter)
@@ -23,19 +24,6 @@ library(stringr)
 singledata <- "Data/simstart_ALL_Reflex_Num.rds"
 ALL_REFLEX <- readRDS(singledata)
 
-# ALL_REFLEX<-alldat%>%
-#   filter(str_detect(alldat$status,"r_f")==TRUE)%>%
-#   filter(!is.na(import_file))%>%
-#   filter(!is.na(aql_aql))%>%
-#   filter(!is.na(geraet))%>%    
-#   dplyr::select(-c(import_file1,ref_auftr_nr,auftr_typ,storno_grund,storno_datum,four_eyes_check,preisli_nr,preisli_vers,kuli_bez,anz_zyklen,prob_nr,zykl_nr,param_art,param_bez,untergrenzen,obergrenzen))%>%
-#   pivot_wider(id_cols=c(status,frei_datum,auftr_nr,mat_nr,charge,met_d_nr,mat_bez,anzahl_muster,chargengroesse),
-#               names_from = param_nr,
-#               values_from = e_wert)%>%
-#   mutate(order=row_number())
-# 
-# write_rds(ALL_REFLEX,file="Data/ALL_REFLEX.rds")
-# 
 #================================
 
 
@@ -48,53 +36,16 @@ ALL_REFLEX <- readRDS(singledata)
 batchdata <- "Data/simstart_ALL_Reflex_Num.rds"
 simstart_ALL_Reflex_Num <- readRDS(batchdata)
 
-# Refelex_EDOs <- read_csv("Data/Reflex_EDO.csv")
-# workdays <- read_csv("Data/workdays.csv")
-# workdays<-workdays%>%
-#   mutate(measurmenttype=MESSGROESSE)%>%
-#   mutate(mean=MITTELWERT)%>%
-#   mutate(sd=STANDARDABWEICHUNG)%>%
-#   dplyr::select(measurmenttype,mean,sd)%>%
-#   filter(measurmenttype!='PNEUMATIC')
-# 
-# simstart_ALL_Reflex_Num<-ALL_REFLEX %>%
-#   group_by(mat_bez,charge) %>% 
-#   summarize(n=n(),mdose=mean(`R-P001`,na.rm=T), sdose=sd(`R-P001`,na.rm=T), mitime=mean(`R-P027`,na.rm=T),sitime=sd(`R-P027`,na.rm=T),midepth=mean(`R-P028`,na.rm=T),
-#             sidepth=sd(`R-P028`,na.rm=T), 
-#             mact=mean(`R-P026`,na.rm=T),sact=sd(`R-P026`,na.rm=T),mnpos=mean(`R-P029`,na.rm=T),snpos=sd(`R-P029`,na.rm=T))
-# 
-# 
-# simstart_ALL_Reflex_Num<-simstart_ALL_Reflex_Num%>%mutate(newn = ifelse(n>=497,110,ifelse(n<=310 & n<=320,58,60)))%>%mutate(NewN20=round(newn*(1+0.2^2),digits=0))  
-# 
-# simstart_ALL_Reflex_Num<-simstart_ALL_Reflex_Num%>%
-#   #added constnts from ISO
-#   mutate(kfac = ifelse(newn == 58, 2.592, ifelse(newn == 60, 2.5730, 2.449)))%>%
-#   mutate(pfac = ifelse(newn == 58, 0.003872, ifelse(newn == 60, 0.004150, 0.006602)))%>%
-#   mutate(fsfac = ifelse(newn == 58, 0.179, ifelse(newn == 60, 0.180, 0.180)))%>%
-#   # added speclimits from EDOs
-#   #first  one sided
-#   mutate(dose_lsl= ifelse(mat_bez == "FITUSIRAN", 0.5, ifelse(mat_bez == "MARS", 1.14, 2.0)))%>%
-#   mutate(itime_usl= ifelse(mat_bez == "FITUSIRAN", 15, ifelse(mat_bez == "MARS", 15, 15))) %>%
-#   mutate(npos_usl= ifelse(mat_bez == "FITUSIRAN", 4.5, ifelse(mat_bez == "MARS", 4.5, 4.6)))%>%
-#   # now 2-sided
-#   mutate(act_lsl= ifelse(mat_bez == "FITUSIRAN", 3, ifelse(mat_bez == "MARS", 3, 3)))%>% 
-#   mutate(act_usl= ifelse(mat_bez == "FITUSIRAN", 16, ifelse(mat_bez == "MARS", 16, 24)))%>%
-#   mutate(idepth_lsl= ifelse(mat_bez == "FITUSIRAN", 4, ifelse(mat_bez == "MARS", 4, 4)))%>% 
-#   mutate(idepth_usl= ifelse(mat_bez == "FITUSIRAN", 8, ifelse(mat_bez == "MARS", 8, 8)))
-# 
-# write_rds(simstart_ALL_Reflex_Num,file="Data/simstart_ALL_Reflex_Num.rds")
-
 #================================
 
 
 
 
-poll <- data.frame(
-  answer = c("Yes", "No"),
-  n = c(254, 238)
-)
-
-
+poll <-ALL_REFLEX %>%
+  summarise(
+    across(where(is.factor), nlevels),
+    n = n(), 
+  )
 
 
 
@@ -106,8 +57,18 @@ shinyApp(
     title = "SMART-GDPU-APP",
     f7TabLayout(
       panels = tagList(
-        f7Panel(title = "Left Panel", side = "left", theme = "light", "Links Bla", effect = "cover"),
-        f7Panel(title = "Right Panel", side = "right", theme = "dark", "Rechts Bla", effect = "cover",
+        f7Panel( side = "left", theme = "light", effect = "reveal",
+                f7Card(
+                    title = "About SMART-GDPU",
+                    "This is a simple app with plain text,
+                    and simple graphs to show the possibilities of 
+                    a fast build Shiny App.",
+                    footer = tagList(
+                    f7Button(color = "blue", label = "My button"),
+                    f7Badge("Badge", color = "green")
+          ))
+          ),
+        f7Panel(title = "Right Panel", side = "right", theme = "light", "Rechts Bla", effect = "cover",
                 f7SingleLayout(
                   navbar = f7Navbar(title = "Select EDOS"),
                     f7Select(
@@ -152,7 +113,7 @@ shinyApp(
               label = "Select a color:",
               thick = TRUE,
               inline = TRUE,
-              selected = "dark",
+              selected = "light",
               choices = c("light", "dark"),
               animation = "pulse",
               status = "info"
@@ -191,8 +152,36 @@ shinyApp(
             f7Card(
               title = "Production and Test Infos",
               apexchartOutput("pie")
+              #apexchartOutput("rBar1"),
+              
             )
+          ),
+          
+          f7Shadow(
+            intensity = 5,
+            hover = TRUE,
+            f7Gauge(
+            id = "mygauge",
+            type = "semicircle",
+            value = 50,
+            borderColor = "#2196f3",
+            borderWidth = 10,
+            valueFontSize = 41,
+            valueTextColor = "#2196f3",
+            labelText = "amount of something"
+            )
+          ),
+          f7Gauge(
+            id = "mygauge2",
+            type = "semicircle",
+            value = 30,
+            borderColor = "#2196f3",
+            borderWidth = 10,
+            valueFontSize = 41,
+            valueTextColor = "#2196f3",
+            labelText = "amount of something"
           )
+          
         ),
         f7Tab(
           tabName = "Tab2",
@@ -203,7 +192,10 @@ shinyApp(
             f7Card(
               title = "Batch Info",
               apexchartOutput("scatter"),
-              apexchartOutput("scatter2")
+              apexchartOutput("scatter2"),
+              apexchartOutput("scatter3"),
+              apexchartOutput("scatter4"),
+              apexchartOutput("scatter5")
             )
             
           )
@@ -227,7 +219,8 @@ shinyApp(
                 openIn = "sheet",
                 multiple = TRUE
               ),
-              tableOutput("data")
+              tableOutput("data"),
+              f7DownloadButton("download","Download!")
             )
           )
         )
@@ -237,37 +230,86 @@ shinyApp(
   server = function(input, output, session) {
     
     # river plot
-    dates <- reactive(seq.Date(Sys.Date() - 30, Sys.Date(), by = input$by))
+    #dates <- reactive(seq.Date(Sys.Date() - 30, Sys.Date(), by = input$by))
+    
     
     output$pie <- renderApexchart({
       apex(
         data = poll,
         type = "pie",
-        mapping = aes(x = answer, y = n)
-      )
+        mapping = aes(x = mat_bez, y = n)
+      )|>ax_title(text ='Produced Batches')
     })
+
+    # output$rBar1 <- renderApexchart({
+    #   apex(
+    #     data = poll|>filter(mat_bez=="JUPITER"),
+    #     type = "radialBar",
+    #     mapping = aes(x = mat_bez, y = n)
+    #   )|>ax_plotOptions(
+    #     radialBar = radialBar_opts(
+    #       startAngle = -90,
+    #       endAngle = 90)
+    #   )|>ax_title(text ='Tested  Batches')
+    # })
     
-    output$scatter <- renderApexchart({
+    
+    
+    
+      output$scatter <- renderApexchart({
       apex(
         data = ALL_REFLEX,
-        type = "scatter",
-        mapping = aes(
+        type = "line",
+        aes(
           x = charge,
           y = mdose,
           fill = mat_bez
-        )
-      )
+          )
+      )|>ax_title(text ='Dose Accuracy')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$mdose)|>ax_states(hover = list(filter = list(type = "darken" ) ))
     })
     output$scatter2 <- renderApexchart({
       apex(
         data = ALL_REFLEX,
-        type = "scatter",
+        type = "line",
         mapping = aes(
           x = charge,
           y = mact,
           fill = mat_bez
         )
-      )
+      )|>ax_title(text ='Actuation Force')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$mact)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+    })
+    output$scatter3 <- renderApexchart({
+      apex(
+        data = ALL_REFLEX,
+        type = "line",
+        mapping = aes(
+          x = charge,
+          y = mitime,
+          fill = mat_bez
+        )
+      )|>ax_title(text ='Injection Time')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$mitime)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+    })
+    output$scatter4 <- renderApexchart({
+      apex(
+        data = ALL_REFLEX,
+        type = "line",
+        mapping = aes(
+          x = charge,
+          y = midepth,
+          fill = mat_bez
+        )
+      )|>ax_title(text ='Injection Depth')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$midepth)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+    })
+    output$scatter5 <- renderApexchart({
+      apex(
+        data = ALL_REFLEX,
+        type = "line",
+        mapping = aes(
+          x = charge,
+          y = mnpos,
+          fill = mat_bez
+        )
+      )|>ax_title(text ='Needle Position')|>add_point(x=ALL_REFLEX$charge,y=ALL_REFLEX$mnpos)|>ax_states(hover = list(filter = list(type = "darken" ) ))
     })
     
     
@@ -276,6 +318,15 @@ shinyApp(
       ALL_REFLEX[, c("charge","mat_bez","NewN20" ,input$variable), drop = FALSE]
     }, rownames = TRUE)
     
+    #save
+    output$download = downloadHandler(
+      filename = function() {
+        paste("data-", Sys.Date(), ".csv", sep="")
+      },
+      content = function(file) {
+        write.csv(ALL_REFLEX[, c("charge","mat_bez","NewN20" ,input$variable)], file)
+      }
+    )
     
     # send the theme to javascript
     observe({
