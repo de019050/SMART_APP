@@ -43,14 +43,41 @@ poll <-ALL_REFLEX|>ungroup()|>select(MAT_BEZ)|>
     across(where(is.factor), nlevels),
     n = n(), .by=MAT_BEZ
   )
+#================================================
 # Anzahl der Getesten AIs
 n_tested <-ALL_REFLEX|>ungroup()|>select(CHARGENGROESSE,N,NEWN20)|>
   reframe(
     across(where(is.numeric), sum),
     n = n(),
-  )
+      )
 
-#================================
+#================================================
+# Get Mean and SD of first 10 batches for R_D_M
+
+R_D_Ms <- ALL_REFLEX %>%
+  filter(MAT_BEZ == 'R_D_M') %>%
+  slice(1:5) %>%
+  ungroup()|>
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))|>
+  mutate(MAT_BEZ='R_D_M')
+
+R_D_Js <- ALL_REFLEX |>
+  filter(MAT_BEZ == 'R_D_J')|>
+  ungroup()|>
+  slice(19:29) |>
+  summarise(across(where(is.numeric), mean))|>
+  mutate(MAT_BEZ='R_D_J')
+
+R_D_MJ_Means<-rbind(R_D_Ms,R_D_Js)
+
+
+
+
+#================================================
+
+
+#================================================
+
 
 
 shinyApp(
@@ -76,8 +103,8 @@ shinyApp(
                       inputId = "variable1",
                       label = "Choose a variable:",
                       #choices = ALL_REFLEXs|>select(MAT_BEZ),
-                      choices = c("R_D_J",  "R_D_M",  "R_F_M",  "R_SAR2"),
-                      selected = "R_D_J"
+                      choices = c('R_D_J',  'R_D_M'),#  "R_F_M",  "R_SAR2")
+                      #selected = 'R_D_M'
                       ),
                     tableOutput("data1")
                 )
@@ -245,22 +272,8 @@ shinyApp(
       )|>ax_title(text ='Produced Batches')
     })
 
-    # output$rBar1 <- renderApexchart({
-    #   apex(
-    #     data = poll|>filter(MAT_BEZ=="JUPITER"),
-    #     type = "radialBar",
-    #     mapping = aes(x = MAT_BEZ, y = n)
-    #   )|>ax_plotOptions(
-    #     radialBar = radialBar_opts(
-    #       startAngle = -90,
-    #       endAngle = 90)
-    #   )|>ax_title(text ='Tested  Batches')
-    # })
-    
-    
-    
-    
-      output$scatter <- renderApexchart({
+    output$scatter <- renderApexchart({
+      req(input$variable1)  # Stellt sicher, dass input$variable1 verfügbar ist
       apex(
         data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
@@ -269,9 +282,17 @@ shinyApp(
           y = mdose,
           fill = MAT_BEZ
           )
-      )|>ax_title(text ='Dose Accuracy')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mdose)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>
+          #ax_yaxis(min=as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(dose_lsl))-0.01)|>
+          ax_title(text ='Dose Accuracy')|>
+          add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mdose)|>
+          ax_states(hover = list(filter = list(type = "darken" ) ))|>
+          add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(mdose)), color = "#62d488", dash = 2, label = NULL)
+          #add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(dose_lsl)), color = "#ee6b4d", dash = 3, label = NULL)
     })
+
     output$scatter2 <- renderApexchart({
+      req(input$variable1)  # Stellt sicher, dass input$variable1 verfügbar ist
       apex(
         data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
@@ -280,9 +301,17 @@ shinyApp(
           y = mact,
           fill = MAT_BEZ
         )
-      )|>ax_title(text ='Actuation Force')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mact)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>
+        ax_yaxis(min=as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(act_lsl))-0.01,max=as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(act_usl))+0.01)|>
+        ax_title(text ='Actuation Force')|>
+        add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mact)|>
+        ax_states(hover = list(filter = list(type = "darken" ) ))|>
+        add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(mact)), color = "#62d488", dash = 2, label = NULL)#|>
+        #add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(act_lsl)), color = "#ee6b4d", dash = 3, label = NULL)|>
+        #add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(act_usl)), color = "#ee6b4d", dash = 3, label = NULL)
     })
     output$scatter3 <- renderApexchart({
+      req(input$variable1)  # Stellt sicher, dass input$variable1 verfügbar ist
       apex(
         data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
@@ -291,9 +320,16 @@ shinyApp(
           y = mitime,
           fill = MAT_BEZ
         )
-      )|>ax_title(text ='Injection Time')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mitime)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>
+        ax_yaxis(max=as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(itime_usl))+0.01)|>
+        ax_title(text ='Injection Time')|>
+        add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mitime)|>
+        ax_states(hover = list(filter = list(type = "darken" ) ))|>
+        add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(mitime)), color = "#62d488", dash = 2, label = NULL)#|>
+        #add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(itime_lsl)), color = "#ee6b4d", dash = 3, label = NULL)|>
     })
     output$scatter4 <- renderApexchart({
+      req(input$variable1)  # Stellt sicher, dass input$variable1 verfügbar ist
       apex(
         data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
@@ -302,9 +338,17 @@ shinyApp(
           y = midepth,
           fill = MAT_BEZ
         )
-      )|>ax_title(text ='Injection Depth')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$midepth)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>
+        ax_yaxis(min=as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(idepth_lsl))-0.01,max=as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(idepth_usl))+0.01)|>
+        ax_title(text ='Injection Depth')|>
+        add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$midepth)|>
+        ax_states(hover = list(filter = list(type = "darken" ) ))|>
+        add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(midepth)), color = "#62d488", dash = 2, label = NULL)#|>
+        #add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(idepth_lsl)), color = "#ee6b4d", dash = 3, label = NULL)|>
+        #add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(idepth_usl)), color = "#ee6b4d", dash = 3, label = NULL)
     })
     output$scatter5 <- renderApexchart({
+      req(input$variable1)  # Stellt sicher, dass input$variable1 verfügbar ist
       apex(
         data = ALL_REFLEX|>filter(MAT_BEZ==input$variable1),
         type = "line",
@@ -313,7 +357,13 @@ shinyApp(
           y = mnpos,
           fill = MAT_BEZ
         )
-      )|>ax_title(text ='Needle Position')|>add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mnpos)|>ax_states(hover = list(filter = list(type = "darken" ) ))
+      )|>
+        ax_yaxis(max=as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(npos_usl))+0.01)|>
+        ax_title(text ='Needle Position')|>
+        add_point(x=ALL_REFLEX$CHARGE,y=ALL_REFLEX$mnpos)|>
+        ax_states(hover = list(filter = list(type = "darken" ) ))|>
+        add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(mnpos)), color = "#62d488", dash = 2, label = NULL)#|>
+        #add_hline(value= as.numeric(R_D_MJ_Means|>filter(MAT_BEZ==input$variable1)|>select(itime_lsl)), color = "#ee6b4d", dash = 3, label = NULL)|>
     })
     
     
