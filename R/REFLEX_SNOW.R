@@ -31,7 +31,7 @@ library(plotly)
 #####################################
 # Get Material
 
-# Function to check for Dupi 150mg R_D_J
+# #Function to check for Dupi 150mg R_D_J
 # check_pattern1 <- function(s) {
 #   contains_dupi <- str_detect(s, regex("dupi", ignore_case = TRUE))
 #   contains_150mg <- str_detect(s, "150mg")
@@ -163,10 +163,10 @@ library(plotly)
 # #
 # #
 # 
-# gs=gi=ga=gn=gis=0.001
+#gs=gi=ga=gn=gis=0.001
 # 
 # simstart_ALL_Reflex_Num<-ALLREFLEX %>%
-#   group_by(MAT_BEZ,CHARGE,CHARGENGROESSE) %>%
+#   group_by(MAT_BEZ,CHARGE,CHARGENGROESSE,FREI_DATUM) %>%
 #   # calculate aggregate values per batch
 #   summarize(N=n(),
 #             mdose=mean(`R-P001`,na.rm=T), sdose=sd(`R-P001`,na.rm=T),gdose=(gs/sdose), mindose=min(`R-P001`,na.rm=T), maxdose=max(`R-P001`,na.rm=T),skdose=skewness(`R-P001`,na.rm=T),kdose=kurtosis(`R-P001`,na.rm=T),
